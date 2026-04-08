@@ -1,0 +1,13 @@
+# Backend
+backend/venv/
+backend/uploads/
+backend/.env
+backend/__pycache__/
+backend/jobs.json
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# General
+.DS_Store
