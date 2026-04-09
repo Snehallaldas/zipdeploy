@@ -18,8 +18,7 @@ app = FastAPI(title="ZipDeploy API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*https://localhost:5173",
-                   "https://fanciful-chimera-63537e.netlify.app/"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
