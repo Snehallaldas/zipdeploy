@@ -17,28 +17,19 @@ async def deploy_project(path: str, project_type: str, job_id: str) -> dict:
         raise Exception(f"Deployment for '{project_type}' not supported yet.")
 
 async def deploy_to_netlify(path: str, project_type: str, job_id: str) -> dict:
-    # Build step for JS frameworks
     if project_type in ("react", "vue", "nextjs", "svelte"):
         path = build_js_project(path, project_type)
+    
+    # For static — handle subfolder extraction
+    elif project_type in ("static", "unknown"):
+        files = os.listdir(path)
+        if len(files) == 1 and os.path.isdir(os.path.join(path, files[0])):
+            path = os.path.join(path, files[0])
+            print(f"[Deployer] Static subfolder detected, deploying from: {path}")
 
     zip_output = f"uploads/{job_id}_deploy"
     deploy_zip = shutil.make_archive(zip_output, "zip", path)
-
-    print(f"[Deployer] Deploying {project_type} project to Netlify...")
-
-    site = await create_netlify_site(job_id)
-    site_id = site["id"]
-    site_url = site["ssl_url"] or site["url"]
-
-    print(f"[Deployer] Site created: {site_url}")
-
-    await upload_zip_to_netlify(site_id, deploy_zip)
-
-    print(f"[Deployer] Deploy complete! URL: {site_url}")
-
-    os.remove(deploy_zip)
-
-    return {"url": site_url, "site_id": site_id}
+    # rest stays the same...
 
 
 def build_js_project(path: str, project_type: str) -> str:
