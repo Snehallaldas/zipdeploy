@@ -44,6 +44,8 @@ async def deploy_to_netlify(path: str, project_type: str, job_id: str) -> dict:
 
 def build_js_project(path: str, project_type: str) -> str:
     import platform
+    UPLOAD_DIR = "uploads"
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
     npm = "npm.cmd" if platform.system() == "Windows" else "npm"
 
     # Handle case where ZIP extracts into a subfolder
