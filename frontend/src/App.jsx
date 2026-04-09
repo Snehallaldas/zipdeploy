@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const API = "http://localhost:8000";
+const API = "https://zipdeploy.onrender.com";
 
 const PROJECT_ICONS = {
   react: "⚛️", static: "🌐", vue: "💚",
