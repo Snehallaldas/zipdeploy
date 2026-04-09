@@ -16,29 +16,53 @@ async def deploy_project(path: str, project_type: str, job_id: str) -> dict:
     else:
         raise Exception(f"Deployment for '{project_type}' not supported yet.")
 
+
 async def deploy_to_netlify(path: str, project_type: str, job_id: str) -> dict:
+    # Build step for JS frameworks
     if project_type in ("react", "vue", "nextjs", "svelte"):
         path = build_js_project(path, project_type)
-    
-    # For static — handle subfolder extraction
+
+    # For static — handle subfolder and rename html file
     elif project_type in ("static", "unknown"):
         files = os.listdir(path)
         if len(files) == 1 and os.path.isdir(os.path.join(path, files[0])):
             path = os.path.join(path, files[0])
             print(f"[Deployer] Static subfolder detected, deploying from: {path}")
+            files = os.listdir(path)
+
+        # Rename any .html file to index.html if needed
+        index_path = os.path.join(path, "index.html")
+        if not os.path.exists(index_path):
+            html_files = [f for f in files if f.endswith(".html")]
+            if html_files:
+                os.rename(os.path.join(path, html_files[0]), index_path)
+                print(f"[Deployer] Renamed {html_files[0]} to index.html")
 
     zip_output = f"uploads/{job_id}_deploy"
     deploy_zip = shutil.make_archive(zip_output, "zip", path)
-    # rest stays the same...
+
+    print(f"[Deployer] Deploying {project_type} project to Netlify...")
+
+    site = await create_netlify_site(job_id)
+    site_id = site["id"]
+    site_url = site["ssl_url"] or site["url"]
+
+    print(f"[Deployer] Site created: {site_url}")
+
+    await upload_zip_to_netlify(site_id, deploy_zip)
+
+    print(f"[Deployer] Deploy complete! URL: {site_url}")
+
+    os.remove(deploy_zip)
+
+    return {"url": site_url, "site_id": site_id}
 
 
 def build_js_project(path: str, project_type: str) -> str:
     import platform
-    UPLOAD_DIR = "uploads"
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    os.makedirs("uploads", exist_ok=True)
     npm = "npm.cmd" if platform.system() == "Windows" else "npm"
 
-    # Handle case where ZIP extracts into a subfolder
     files = os.listdir(path)
     if len(files) == 1 and os.path.isdir(os.path.join(path, files[0])):
         path = os.path.join(path, files[0])
@@ -71,6 +95,8 @@ def build_js_project(path: str, project_type: str) -> str:
             return output_path
 
     raise Exception("Build completed but no output folder found (expected dist/ or build/)")
+
+
 async def create_netlify_site(job_id: str) -> dict:
     async with httpx.AsyncClient() as client:
         response = await client.post(
