@@ -11,11 +11,10 @@ NETLIFY_API = "https://api.netlify.com/api/v1"
 
 
 async def deploy_project(path: str, project_type: str, job_id: str) -> dict:
-    if project_type in ("static", "react", "vue", "nextjs", "svelte"):
+    if project_type in ("static", "react", "vue", "nextjs", "svelte", "unknown"):
         return await deploy_to_netlify(path, project_type, job_id)
     else:
         raise Exception(f"Deployment for '{project_type}' not supported yet.")
-
 
 async def deploy_to_netlify(path: str, project_type: str, job_id: str) -> dict:
     # Build step for JS frameworks

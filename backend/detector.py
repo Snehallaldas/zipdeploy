@@ -43,10 +43,12 @@ def detect_project(path: str) -> str:
         if "django" in deps:
             return "django"
 
-    # ── Static HTML ──────────────────────────────────────────
-    if "index.html" in files:
+    # ── Static HTML ──────────────────────────────────────────────
+    # Check for any .html file, not just index.html
+    html_files = [f for f in files if f.endswith(".html")]
+    if html_files:
         return "static"
-
+    
     # ── Unknown ──────────────────────────────────────────────
     return "unknown"
 
